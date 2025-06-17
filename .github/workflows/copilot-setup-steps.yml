@@ -39,10 +39,10 @@ jobs:
       - name: Restore the application
         run: msbuild Advent DALLE3.sln /t:Restore /p:Configuration=Debug
         env:
-          Configuration: ${{ Debug }}
+          Configuration: Debug
 
       - name: Create the app
         run: msbuild Advent DALLE3.sln /t:Publish /p:Configuration=Debug /p:Platform=x64
         env:
-          Configuration: ${{ Debug }}
-          Platform: ${{ x64 }}
+          Configuration: Debug
+          Platform: x64
