@@ -119,10 +119,6 @@ namespace Dalle3_CSharp_Advent
             {
                 throw new Exception("Invalid OpenAI API key. Please check your API key and ensure it's valid.");
             }
-            catch (Exception ex) when (ex.Message.Contains("quota") || ex.Message.Contains("limit"))
-            {
-                throw new Exception("OpenAI API quota exceeded. Please check your usage limits or billing information.");
-            }
             catch (Exception ex)
             {
                 throw new Exception($"OpenAI API error while generating prompt: {ex.Message}");
@@ -150,10 +146,6 @@ namespace Dalle3_CSharp_Advent
             catch (Exception ex) when (ex.Message.Contains("Unauthorized") || ex.Message.Contains("401") || ex.Message.Contains("authentication"))
             {
                 throw new Exception("Invalid OpenAI API key. Please check your API key and ensure it's valid.");
-            }
-            catch (Exception ex) when (ex.Message.Contains("quota") || ex.Message.Contains("limit"))
-            {
-                throw new Exception("OpenAI API quota exceeded. Please check your usage limits or billing information.");
             }
             catch (Exception ex) when (ex.Message.Contains("content_policy") || ex.Message.Contains("policy"))
             {
