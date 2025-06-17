@@ -24,23 +24,36 @@ namespace Dalle3_CSharp_Advent
         private async void Save_Click(object sender, RoutedEventArgs e)
         {
             WorkingState();
-            var folder = await GetPicturesFolder();
-            var destination = Path.Combine(folder, SAVE_FOLER, $"{HumanPrompt.Text}.png");
-            var destination2 = Path.Combine(folder, SAVE_FOLER, $"{HumanPrompt.Text}.txt");
-
-            using (var client = new WebClient())
+            
+            try
             {
-                client.DownloadFile(_currentImage, destination);
-            }
+                var folder = await GetPicturesFolder();
+                var destination = Path.Combine(folder, SAVE_FOLER, $"{HumanPrompt.Text}.png");
+                var destination2 = Path.Combine(folder, SAVE_FOLER, $"{HumanPrompt.Text}.txt");
 
-            using (StreamWriter outputFile = new StreamWriter(destination2, false))
+                using (var client = new WebClient())
+                {
+                    client.DownloadFile(_currentImage, destination);
+                }
+
+                using (StreamWriter outputFile = new StreamWriter(destination2, false))
+                {
+                    outputFile.WriteLine(_currentPrompt);
+                }
+
+                SaveNotification.Title = "Image Saved";
+                SaveNotification.Subtitle = destination;
+                SaveNotification.IsOpen = true;
+            }
+            catch (Exception ex)
             {
-                outputFile.WriteLine(_currentPrompt);
+                ShowErrorNotification("Error Saving Image", 
+                    $"An error occurred while saving the image: {ex.Message}");
             }
-
-            SaveNotification.Subtitle = destination;
-            SaveNotification.IsOpen = true;
-            FinishedState();
+            finally
+            {
+                FinishedState();
+            }
         }
 
         private async void GenerateImage_Click(object sender, RoutedEventArgs e)
@@ -48,53 +61,100 @@ namespace Dalle3_CSharp_Advent
             GeneratedImage.Source = null;
             WorkingState();
 
-            _currentPrompt = await GeneratePrompt(HumanPrompt.Text);
+            try
+            {
+                // Validate API key before making any calls
+                if (string.IsNullOrWhiteSpace(OPENAI_KEY))
+                {
+                    ShowErrorNotification("OpenAI API Key Missing", 
+                        "Please add your OpenAI API key to the OPENAI_KEY constant in MainWindow.xaml.cs. " +
+                        "Visit https://platform.openai.com/ to get your API key.");
+                    return;
+                }
 
-            ShowPrompt(_currentPrompt);
-            var image = await GenerateImage(_currentPrompt);
-            HidePrompt();
+                _currentPrompt = await GeneratePrompt(HumanPrompt.Text);
 
-            GeneratedImage.Source = image;
+                ShowPrompt(_currentPrompt);
+                var image = await GenerateImage(_currentPrompt);
+                HidePrompt();
 
-            FinishedState();
-            Save.IsEnabled = true;
+                GeneratedImage.Source = image;
+
+                Save.IsEnabled = true;
+            }
+            catch (Exception ex)
+            {
+                HidePrompt();
+                ShowErrorNotification("Error Generating Image", 
+                    $"An error occurred while generating the image: {ex.Message}");
+            }
+            finally
+            {
+                FinishedState();
+            }
         }
 
         private static async Task<string> GeneratePrompt(string userPrompt)
         {
-            OpenAIClient client = new(OPENAI_KEY);
+            try
+            {
+                OpenAIClient client = new(OPENAI_KEY);
 
-            var responseCompletion = await client.GetChatCompletionsAsync(
-                new ChatCompletionsOptions()
-                {
-                    ChoiceCount = 1,
-                    Temperature = 1,
-                    MaxTokens = 256,                    
-                    DeploymentName = "gpt-4",
-                    Messages = {
-                        new ChatRequestSystemMessage("Create a prompt for Dall-e that will generate a beautiful Christmas scene using the following text for inspiration:"),
-                        new ChatRequestUserMessage(userPrompt),
-                    },
-                });
+                var responseCompletion = await client.GetChatCompletionsAsync(
+                    new ChatCompletionsOptions()
+                    {
+                        ChoiceCount = 1,
+                        Temperature = 1,
+                        MaxTokens = 256,                    
+                        DeploymentName = "gpt-4",
+                        Messages = {
+                            new ChatRequestSystemMessage("Create a prompt for Dall-e that will generate a beautiful Christmas scene using the following text for inspiration:"),
+                            new ChatRequestUserMessage(userPrompt),
+                        },
+                    });
 
-            return responseCompletion.Value.Choices[0].Message.Content;
+                return responseCompletion.Value.Choices[0].Message.Content;
+            }
+            catch (Exception ex) when (ex.Message.Contains("Unauthorized") || ex.Message.Contains("401") || ex.Message.Contains("authentication"))
+            {
+                throw new Exception("Invalid OpenAI API key. Please check your API key and ensure it's valid.");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"OpenAI API error while generating prompt: {ex.Message}");
+            }
         }
 
         private async Task<BitmapImage> GenerateImage(String prompt)
         {
-            OpenAIClient client = new(OPENAI_KEY);
+            try
+            {
+                OpenAIClient client = new(OPENAI_KEY);
 
-            var responseImages = await client.GetImageGenerationsAsync(
-                new ImageGenerationOptions()
-                {
-                    ImageCount = 1,
-                    Prompt = prompt,
-                    Size = ImageSize.Size1792x1024,
-                    DeploymentName = "dall-e-3"
-                });
+                var responseImages = await client.GetImageGenerationsAsync(
+                    new ImageGenerationOptions()
+                    {
+                        ImageCount = 1,
+                        Prompt = prompt,
+                        Size = ImageSize.Size1792x1024,
+                        DeploymentName = "dall-e-3"
+                    });
 
-            _currentImage = responseImages.Value.Data[0].Url;
-            return new BitmapImage(_currentImage);
+                _currentImage = responseImages.Value.Data[0].Url;
+                return new BitmapImage(_currentImage);
+            }
+            catch (Exception ex) when (ex.Message.Contains("Unauthorized") || ex.Message.Contains("401") || ex.Message.Contains("authentication"))
+            {
+                throw new Exception("Invalid OpenAI API key. Please check your API key and ensure it's valid.");
+            }
+            catch (Exception ex) when (ex.Message.Contains("content_policy") || ex.Message.Contains("policy"))
+            {
+                throw new Exception("The generated prompt violates OpenAI's content policy. Please try a different input.");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"OpenAI API error while generating image: {ex.Message}");
+            }
         }
 
         private void ShowPrompt(string prompt)
@@ -119,6 +179,13 @@ namespace Dalle3_CSharp_Advent
         {
             ProgressIndicator.IsActive = false;
             Generate.IsEnabled = true;
+        }
+
+        private void ShowErrorNotification(string title, string message)
+        {
+            SaveNotification.Title = title;
+            SaveNotification.Subtitle = message;
+            SaveNotification.IsOpen = true;
         }
 
         private static async Task<string> GetPicturesFolder()
