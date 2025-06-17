@@ -37,12 +37,12 @@ jobs:
         uses: microsoft/setup-msbuild@v1.0.2
 
       - name: Restore the application
-        run: msbuild Advent DALLE3.sln /t:Restore /p:Configuration=Debug
+        run: msbuild "Advent DALLE3.sln" /t:Restore /p:Configuration=Debug
         env:
           Configuration: Debug
 
       - name: Create the app
-        run: msbuild Advent DALLE3.sln /t:Publish /p:Configuration=Debug /p:Platform=x64
+        run: msbuild "Advent DALLE3.sln" /t:Publish /p:Configuration=Debug /p:Platform=x64
         env:
           Configuration: Debug
           Platform: x64
