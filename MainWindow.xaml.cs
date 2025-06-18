@@ -1,5 +1,6 @@
 using Azure.AI.OpenAI;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace Dalle3_CSharp_Advent
     public sealed partial class MainWindow : Window
     {
         private const string OPENAI_KEY = "";
-        private const string SAVE_FOLER = "Advent DALLE";
+        private const string SAVE_FOLER = "Holiday DALLE";
         private Uri _currentImage;
         private string _currentPrompt;
 
@@ -48,7 +49,14 @@ namespace Dalle3_CSharp_Advent
             GeneratedImage.Source = null;
             WorkingState();
 
-            _currentPrompt = await GeneratePrompt(HumanPrompt.Text);
+            // Get selected holiday from ComboBox
+            string selectedHoliday = "Christmas"; // Default fallback
+            if (HolidaySelector.SelectedItem is ComboBoxItem selectedItem)
+            {
+                selectedHoliday = selectedItem.Tag?.ToString() ?? "Christmas";
+            }
+
+            _currentPrompt = await GeneratePrompt(HumanPrompt.Text, selectedHoliday);
 
             ShowPrompt(_currentPrompt);
             var image = await GenerateImage(_currentPrompt);
@@ -60,9 +68,20 @@ namespace Dalle3_CSharp_Advent
             Save.IsEnabled = true;
         }
 
-        private static async Task<string> GeneratePrompt(string userPrompt)
+        private static async Task<string> GeneratePrompt(string userPrompt, string holiday)
         {
             OpenAIClient client = new(OPENAI_KEY);
+
+            // Create holiday-specific prompt descriptions
+            string holidayDescription = holiday switch
+            {
+                "Valentine's Day" => "a beautiful romantic Valentine's Day scene with hearts, roses, and love themes",
+                "Easter" => "a beautiful Easter scene with spring elements, eggs, bunnies, and renewal themes",
+                "Halloween" => "a beautiful Halloween scene with pumpkins, autumn colors, and spooky but friendly themes",
+                "Birthday" => "a beautiful birthday celebration scene with cake, balloons, and festive party themes",
+                "Christmas" => "a beautiful Christmas scene",
+                _ => "a beautiful holiday scene"
+            };
 
             var responseCompletion = await client.GetChatCompletionsAsync(
                 new ChatCompletionsOptions()
@@ -72,7 +91,7 @@ namespace Dalle3_CSharp_Advent
                     MaxTokens = 256,                    
                     DeploymentName = "gpt-4",
                     Messages = {
-                        new ChatRequestSystemMessage("Create a prompt for Dall-e that will generate a beautiful Christmas scene using the following text for inspiration:"),
+                        new ChatRequestSystemMessage($"Create a prompt for Dall-e that will generate {holidayDescription} using the following text for inspiration:"),
                         new ChatRequestUserMessage(userPrompt),
                     },
                 });
