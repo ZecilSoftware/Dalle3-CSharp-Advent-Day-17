@@ -16,7 +16,7 @@
             <RowDefinition Height="1*" />
         </Grid.RowDefinitions>
         <Image Grid.Row="0" Grid.RowSpan="4" Source="Assets/background.jpg" Stretch="UniformToFill"></Image>
-        <TextBlock Grid.Row="0" FontFamily="Segoe UI" FontSize="24" Margin="50,10,0,5" Foreground="DarkGreen">Advent DALL-E</TextBlock>
+        <TextBlock Grid.Row="0" FontFamily="Segoe UI" FontSize="24" Margin="50,10,0,5" Foreground="DarkGreen">Holiday DALL-E</TextBlock>
 
         <Border Grid.Row="1" BorderThickness="2" BorderBrush="Gainsboro" Background="#FFFFFFFF" Margin="60,10">
             <Image x:Name="GeneratedImage" Stretch="Uniform"></Image>
@@ -24,10 +24,21 @@
         <ProgressRing x:Name="ProgressIndicator" Grid.Row="1" IsActive="False" Background="LightGray" Width="100" Height="100" />
         <TextBlock x:Name="GeneratedPrompt" Visibility="Collapsed" Grid.Row="1" FontFamily="Segoe UI" FontSize="18" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Bottom" TextWrapping="Wrap" Width="auto" Height="auto" Margin="80,50">Prompt goes here</TextBlock>
 
-        <TextBox x:Name="HumanPrompt" Grid.Row="2" PlaceholderText="Enter Inspiration" AutomationProperties.Name="multi-line TextBox" BorderBrush="Gainsboro" BorderThickness="2" Margin="20,50,20,5" Width="auto" Height="auto" AcceptsReturn="True" IsSpellCheckEnabled="True"></TextBox>
+        <TextBox x:Name="HumanPrompt" Grid.Row="2" PlaceholderText="Enter Inspiration" AutomationProperties.Name="multi-line TextBox" BorderBrush="Gainsboro" BorderThickness="2" Margin="20,50,20,35" Width="auto" Height="auto" AcceptsReturn="True" IsSpellCheckEnabled="True"></TextBox>
+        
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="20,0,0,5" VerticalAlignment="Bottom">
+            <TextBlock Text="Holiday:" FontFamily="Segoe UI" FontSize="14" Foreground="DarkGreen" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <ComboBox x:Name="HolidaySelector" Width="150" SelectedIndex="4">
+                <ComboBoxItem Content="Valentine's Day" Tag="Valentine's Day"/>
+                <ComboBoxItem Content="Easter" Tag="Easter"/>
+                <ComboBoxItem Content="Halloween" Tag="Halloween"/>
+                <ComboBoxItem Content="Birthday" Tag="Birthday"/>
+                <ComboBoxItem Content="Christmas" Tag="Christmas"/>
+            </ComboBox>
+        </StackPanel>
         
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="30,0" Spacing="30">
-            <Button x:Name="Generate" Click="GenerateImage_Click" Background="GhostWhite" Foreground="DarkGreen" FontWeight="SemiBold">Advent of DALL-E</Button>
+            <Button x:Name="Generate" Click="GenerateImage_Click" Background="GhostWhite" Foreground="DarkGreen" FontWeight="SemiBold">Generate Holiday Image</Button>
             <Button x:Name="Save" Click="Save_Click" Background="GhostWhite" Foreground="DarkGreen" FontWeight="SemiBold" IsEnabled="False">Save Image</Button>
         </StackPanel>
 
